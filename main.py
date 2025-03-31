@@ -1,70 +1,85 @@
 import flet as ft
 from datetime import datetime
 
-
-class Task:
-    def __init__(self, text, created_at, is_completed=False):
-        self.text = text
-        self.created_at = created_at
-        self.is_completed = is_completed
-
-    def __str__(self):
-        return f"{self.text} (Создано: {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}) {'✅' if self.is_completed else '❌'}"
-
 def main(page: ft.Page):
-    page.title = "Управление задачами"
+    page.title = "Моё первое приложение"
     page.theme_mode = ft.ThemeMode.LIGHT
+    
+    greeting_text = ft.Text("Привет, мир!")
 
-    task_list = []
+    greeting_history = []
 
-    task_input = ft.TextField(label="Введите задачу", autofocus=True)
-    task_history = ft.Text("Список задач:")
+    history_text = ft.Text("История приветствий:", style='bodyMedium')
 
-    def add_task(e):
-        task_text = task_input.value.strip()
-        if task_text:
-            created_at = datetime.now()
-            new_task = Task(task_text, created_at)
-            task_list.append(new_task)
-            task_input.value = ''
-            update_task_list()
+    def on_button_click(e):
+        name = name_input.value.strip()
+
+        if name:
+            greeting, greeting_color = hour(e)
+            greeting_text.value = f"{greeting}, {name}!"
+            greeting_text.color = greeting_color  
+            greet_button.text = 'Поздороваться снова'
+            name_input.value = ''
+
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            greeting_history.append(f"{timestamp}: {name}")
+            history_text.value = "История приветствий:\n" + "\n".join(greeting_history)
         else:
-            task_history.value = "Введите текст задачи!"
+            greeting_text.value = "Пожалуйста, введите ваше имя!"
 
         page.update()
 
-    def update_task_list():
-        task_history.value = "Список задач:\n"
-        for task in task_list:
-            task_history.value += f"{task}\n"
+    name_input = ft.TextField(label="Введите ваше имя:", autofocus=True, on_submit=on_button_click)
+
+    def clear_history(e):
+        greeting_history.clear()
+        history_text.value = "История приветствий:"
+        page.update()
+    
+    def toggle_theme(e):
+        if page.theme_mode == ft.ThemeMode.LIGHT:
+            page.theme_mode = ft.ThemeMode.DARK
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
+
         page.update()
 
-    def sort_by_date(e):
-        task_list.sort(key=lambda task: task.created_at, reverse=True)
-        update_task_list()
+    def hour(e):
+        current_hour = datetime.now().hour
 
-    def sort_by_status(e):
-        task_list.sort(key=lambda task: task.is_completed)
-        update_task_list()
+        if 6 <= current_hour < 12:
+            greeting = 'Доброе утро, '
+            greeting_color = ft.colors.YELLOW  
+        elif 12 <= current_hour < 18:
+            greeting = 'Добрый день, '
+            greeting_color = ft.colors.ORANGE  
+        elif 18 <= current_hour < 24:
+            greeting = 'Добрый вечер, '
+            greeting_color = ft.colors.RED 
+        elif 0 <= current_hour < 6:
+            greeting = 'Доброй ночи, '
+            greeting_color = ft.colors.BLUE  
+        return greeting, greeting_color
 
+    theme_button = ft.IconButton(icon=ft.icons.BRIGHTNESS_6, tooltip="Сменить тему", on_click=toggle_theme)
 
-    add_task_button = ft.ElevatedButton("Добавить задачу", on_click=add_task)
-    sort_date_button = ft.TextButton("Сортировать по дате", on_click=sort_by_date)
-    sort_status_button = ft.TextButton("Сортировать по статусу", on_click=sort_by_status)
+    clear_button = ft.TextButton("Очистить историю", on_click=clear_history)
 
+    clear_button_icon = ft.IconButton(icon=ft.icons.DELETE, tooltip="Очиститка", on_click=clear_history)
 
-    page.add(
-        task_input,
-        add_task_button,
-        sort_date_button,
-        sort_status_button,
-        task_history
+    greet_button = ft.ElevatedButton("Поздороваться", on_click=on_button_click)
+
+    page.add(ft.Row([theme_button, clear_button,
+                     clear_button_icon], alignment=ft.MainAxisAlignment.CENTER),
+             greeting_text,
+             name_input,
+             greet_button,
+             history_text,
     )
 
 ft.app(target=main)
 
-
-#hw 4
+#hw 
 # ft.app(target=main, view=ft.WEB_BROWSER)
 
 
